@@ -267,11 +267,21 @@ ContactAPI.prototype.deleteContact = function deleteContact(contactId, success, 
     }
 };
 
-ContactAPI.prototype.addScoreByEmail = function update(contact, success, failure) {
+ContactAPI.prototype.addScoreByEmail = function update(email, score, success, failure) {
+
+    var qs = require("querystring");
+    // Build the post string from an object
+      var post_data = qs.stringify({
+          'email' : email,
+          'score': score
+      });
+ 
     var options = this.getOptions();
     options.path = '/dev/api/contacts/add-score';
-    options.method = 'PUT';
-    options.headers['Content-Type'] = 'application/json';
+
+    options.method = 'POST';
+    options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    options.headers['Content-Length'] = Buffer.byteLength(post_data);
 
     var put = https.request(options, function(resp) {
         resp.setEncoding('utf8');
@@ -282,7 +292,6 @@ ContactAPI.prototype.addScoreByEmail = function update(contact, success, failure
         resp.on('end', function() {
             if (success) {
                 try {
-                    console.log("Status Code = " + resp.statusCode);
                     var contacts = JSON.parse(body);
                     success(contacts);
                 } catch (ex) {
@@ -298,8 +307,7 @@ ContactAPI.prototype.addScoreByEmail = function update(contact, success, failure
     });
 
     try {
-        var data = JSON.stringify(contact);
-        put.write(data);
+        put.write(post_data);
         put.end();
     } catch (ex) {
         failure(ex);
